@@ -17,3 +17,5 @@
 
 ### collect processed data from AudioProcessor.c
 
+### add windows support for building
+
