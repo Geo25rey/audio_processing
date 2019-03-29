@@ -7,7 +7,7 @@ This application will be used as part of the exhibit for PiRIT (SIAM's official 
 ### Dependancies
 <ul>
     <li>EMSDK (https://webassembly.org/getting-started/developers-guide/) Note: If running Windows 10, I recommend following the Windows 7 install instructions.</li>
-    <li>- GNU Make</li>
+    <li>GNU Make</li>
 </ul>
 
 Run `make` to build it in the project directory. (will change see TODO)
