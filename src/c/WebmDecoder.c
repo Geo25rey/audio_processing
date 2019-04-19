@@ -253,6 +253,8 @@ static bool decodeBytes(void* buff, uint64_t pos, size_t size, uint8_t firstByte
     for (uint8_t i = 1; i < size; i++) {
         firstByte = ((uint8_t*)buff)[pos + i];
         currentState = transition(firstByte, currentState);
+        if (currentState == initialState)
+            break;
         value = (value << 8) + firstByte;
     }
     if (!finalState(currentState))
