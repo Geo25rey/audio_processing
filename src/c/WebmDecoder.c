@@ -1,7 +1,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "dfa.h"
+
+#include <dfa.h>
 
 static struct Data {
     State name;

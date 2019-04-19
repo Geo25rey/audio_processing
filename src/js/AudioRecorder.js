@@ -118,7 +118,7 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
 		audio: true
 	}).then(stream => {		
 		const options = {
-			mimeType: 'audio/webm'
+			mimeType: 'audio/webm;codecs=opus'
 		};
 		mediaRecorder = new MediaRecorder(stream, options);
 

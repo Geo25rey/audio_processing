@@ -5,10 +5,12 @@ WEBMDECODER_EXPORTED_FUNCTIONS := '_parseWebm' # TODO add to configure scirpt
 ## DEFINED BY STATIC
 SRC := $(PROJECT)/src
 CC := emcc
+INCLUDE := $(SRC)/c/include
+CFLAGS := -I$(INCLUDE)
 RUN := emrun
 PROJECT_NAME := $(shell basename $(PROJECT))
 
-all: index.html js js/*.js js/libs js/libs/*.js js/WebmDecoderModule.wasm css css/*.css #* */*
+all: index.html c c/*.o js js/*.js js/libs js/libs/*.js js/WebmDecoderModule.wasm css css/*.css #* */*
 
 js:
 	mkdir -v js
@@ -22,8 +24,14 @@ css:
 %.html: $(SRC)/%.html
 	cp -v $< $@
 
-js/WebmDecoderModule.wasm: $(SRC)/c/WebmDecoder.c $(SRC)/c/dfa.h
-	$(CC) -s EXPORTED_FUNCTIONS="[$(WEBMDECODER_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" $< -o $@
+c:
+	mkdir -v c
+
+c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+js/WebmDecoderModule.wasm: c/*.o
+	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBMDECODER_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" --emrun $< -o $@
 
 js/%.js: $(SRC)/js/%.js
 	cp -v $^ js/
@@ -37,11 +45,11 @@ css/%.css: $(SRC)/css/%.css
 .PHONY: run zip clean superClean
 
 clean:
-	rm -rv *.html js/ css/
+	rm -rv *.html js/ css/ c/
 
 superClean: 
 	rm -v $(PROJECT_NAME).zip
-	rm -rv *.html js/ css/
+	rm -rv *.html js/ css/ c/
 
 zip: all
 	zip -rouv $(PROJECT_NAME).zip . -i js/ js/* js/*/* css/ css/* *.html
