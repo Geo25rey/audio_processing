@@ -7,7 +7,9 @@ BUILD_DIR := $(shell pwd)
 SRC := $(PROJECT)/src
 CC := emcc
 INCLUDE := $(SRC)/c/include
-CFLAGS := -I$(INCLUDE)
+OPUS_INCLUDE := $(shell pwd)/opus-pkg/include
+OPUS_LIBRARY := $(shell pwd)/opus-pkg/lib
+CFLAGS := -I$(INCLUDE) -I$(OPUS_INCLUDE) -L$(OPUS_LIBRARY)
 RUN := emrun
 PROJECT_NAME := $(shell basename $(PROJECT))
 
@@ -27,16 +29,16 @@ css:
 
 opus-build:
 	mkdir -v opus-build
+	cd opus-build && ../opus/autogen.sh && emconfigure ../opus/configure --prefix=$(BUILD_DIR)/opus-pkg --disable-intrinsics
 
 opus-pkg: opus-build
 	mkdir -v opus-pkg
-	cd opus-build && ../opus/autogen.sh && emconfigure ../opus/configure --prefix=$(BUILD_DIR)/opus-pkg --disable-intrinsics && emmake make && emmake make install
-	rm -R opus-build
+	cd opus-build && emmake make && emmake make install
 
 c: opus-pkg
 	mkdir -v c
 
-c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h
+c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h c
 	$(CC) $(CFLAGS) -o $@ $<
 
 js/WebmDecoderModule.wasm: c/WebmDecoder.o c/AudioProcessor.o
