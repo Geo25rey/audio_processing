@@ -3,11 +3,15 @@
 #include <stdio.h>
 
 #include <dfa.h>
+#include <AudioProcessor.h>
+
+static uint8_t* unprocessed_audio = NULL;
+static int unprocessed_audio_size = 0;
 
 static struct Data {
     State name;
     uint64_t size;
-    uint64_t value;
+    uint8_t value;
 } data;
 
 static bool scanWebmTag(void* buff, uint64_t pos);
