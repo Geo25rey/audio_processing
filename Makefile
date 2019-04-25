@@ -42,7 +42,7 @@ c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h c
 	$(CC) $(CFLAGS) -o $@ $<
 
 js/WebmDecoderModule.wasm: c/WebmDecoder.o c/AudioProcessor.o
-	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBMDECODER_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" --emrun $< -o $@
+	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBMDECODER_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" -emrun $< -o $@
 
 js/%.js: $(SRC)/js/%.js
 	cp -v $^ js/
