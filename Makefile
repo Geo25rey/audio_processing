@@ -1,13 +1,13 @@
 ## DEFINED BY CONFIGURE // TODO add configure script to set pwd once
 PROJECT := $(shell pwd)
-WEBASSEMBLY_EXPORTED_FUNCTIONS :=  # TODO add to configure scirpt
+WEBASSEMBLY_EXPORTED_FUNCTIONS := '_dfft' # TODO add to configure scirpt
 
 ## DEFINED BY STATIC
 BUILD_DIR := $(shell pwd)
 SRC := $(PROJECT)/src
 CC := emcc
 INCLUDE := $(SRC)/c/include
-CFLAGS := -I$(INCLUDE)
+CFLAGS := -I$(INCLUDE) -emrun -s ALLOW_MEMORY_GROWTH=1
 RUN := emrun
 PROJECT_NAME := $(shell basename $(PROJECT))
 
@@ -32,7 +32,7 @@ c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h c
 	$(CC) $(CFLAGS) -o $@ $<
 
 js/AudioProcessorModule.js: c/AudioProcessor.o js
-	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBASSEMBLY_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" -emrun $< -o $@
+	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBASSEMBLY_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'writeArrayToMemory']" $< -o $@
 
 js/%.js: $(SRC)/js/%.js js
 	cp -v $^ js/ || true

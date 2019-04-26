@@ -39,10 +39,10 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
 	
 	if (typeof(dataReadyCallback) !== 'function')
 		throw new Error();
-	if (dataReadyCallback.length !== 2)
+	if (dataReadyCallback.length !== 3)
 		throw new Error();
 
-	AudioRecorder.prototype.startRecording = function startRecording(interval) {
+	AudioRecorder.prototype.startRecording = function startRecording() {
 		if (!isRecording) {
 			isRecording = true;
 			audioContext.resume();
@@ -64,16 +64,17 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
     let handleSuccess = function(stream) {
         let context = audioContext;
         let source = context.createMediaStreamSource(stream);
-        let processor = context.createScriptProcessor(1024, 1, 1);
+        let processor = context.createScriptProcessor(256, 1, 1); // 2^8
 
         source.connect(processor);
         processor.connect(context.destination);
 
-        isRecording = true;
+        context.suspend();
+        isRecording = false;
 
         processor.onaudioprocess = function(e) {
             for (let i = 0; i < e.inputBuffer.numberOfChannels; ++i)
-                dataReadyCallback(i, e.inputBuffer.getChannelData(i));
+                dataReadyCallback(i, e.inputBuffer.getChannelData(i), e.inputBuffer);
         };
         microphonePermissionCallback();
     };
