@@ -10,26 +10,7 @@
  * 		When user gives permission to microphone call callback
  * 
  * @throws Error
- *		BECAUSE
- *
- * @function getRecordingData()
- *      Returns a copy of the data saved during the recording
- *
- *      @throws Error
- *          An error occures when trying to access the recorded data before the
- *          recording has finished completely
- *
- * @function getAudioElement()
- *      Returns a copy of the audio element with the data saved during the 
- *      recording as the audio source
- *
- *      @throws Error
- *          An error occures when trying to access the recorded data before the
- *          recording has finished completely
- *
- * @function isDataAvailable()
- *      Returns true if and only if the recorded audio is ready to be processed
- *      or played
+ *		An error occures when improper callbacks are passed in
  *
  * @function startRecording()
  *      Starts the recording
@@ -45,13 +26,11 @@
  *          
  */
 function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
-	var result = {
-		dataavailable: null,
-		data: null,
-		audio: null,
-		isRecording: false
-	};
-	var mediaRecorder;
+    // Imports
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+	let isRecording = false;
+    let audioContext = new AudioContext();
 
 	if (typeof(microphonePermissionCallback) !== 'function')
 		throw new Error();
@@ -60,86 +39,46 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
 	
 	if (typeof(dataReadyCallback) !== 'function')
 		throw new Error();
-	if (dataReadyCallback.length !== 1)
+	if (dataReadyCallback.length !== 2)
 		throw new Error();
-	result.dataavailable = dataReadyCallback;
-
-	const readers = [];
-	function addReader() {
-		readers.push(new FileReader());
-		readers[readers.length - 1].addEventListener("loadend", (e) => {
-			result.data = e.srcElement.result;
-			result.dataavailable(result.data);
-		});
-	}
-	addReader();
-
-	AudioRecorder.prototype.getPreviousRecordingData = function getPreviousRecordingData() {
-		if (result.dataavailable)
-			return result.data;
-		else
-			throw new Error("Data is unavailable. Try calling later next time");
-	};
-
-	// AudioRecorder.prototype.getAudioElement = function getAudioElement() {
-	// 	if (result.dataavailable) {
-	// 		let audio = new Audio();
-	// 		audio.src = result.audio.src;
-	// 		return audio;
-	// 	} else
-	// 		throw new Error("Data is unavailable. Try calling later next time");
-	// };
-
-	AudioRecorder.prototype.isDataAvailable = function isDataAvailable() {
-		return result.dataavailable;
-	};
 
 	AudioRecorder.prototype.startRecording = function startRecording(interval) {
-		if (!result.isRecording) {
-			result.isRecording = true;
-			mediaRecorder.start(interval);
+		if (!isRecording) {
+			isRecording = true;
+			audioContext.resume();
 		} else
 			throw new Error("Recording has already started. Stop recording " +
 				"before starting again.");
 	};
 
 	AudioRecorder.prototype.stopRecording = function stopRecording() {
-		if (result.isRecording) {
-			result.isRecording = false;
-			mediaRecorder.stop();
+		if (isRecording) {
+			isRecording = false;
+			audioContext.suspend();
 		} else
 			throw new Error("Recording has not been started yet. Start " +
 				"recording before stopping.");
 
 	};
 
-	// Requests microphone and initializes media recorder with event listeners
-	navigator.mediaDevices.getUserMedia({
-		audio: true
-	}).then(stream => {		
-		const options = {
-			mimeType: 'audio/webm;codecs=opus'
-		};
-		mediaRecorder = new MediaRecorder(stream, options);
+    let handleSuccess = function(stream) {
+        let context = audioContext;
+        let source = context.createMediaStreamSource(stream);
+        let processor = context.createScriptProcessor(1024, 1, 1);
 
-		// const audioChunks = [];
-		mediaRecorder.addEventListener("dataavailable", event => {
-			// audioChunks.push(event.data);
-			for (let reader of readers)
-				try {
-					reader.readAsDataURL(event.data);
-					break;
-				} catch (e) {
-					if (reader === readers[readers.length - 1])
-						addReader();
-				}
-		});
+        source.connect(processor);
+        processor.connect(context.destination);
 
-		// mediaRecorder.addEventListener("stop", () => {
-		// 	const audioBlob = new Blob(audioChunks);
-		// 	const audioUrl = URL.createObjectURL(audioBlob);
-		// 	result.audio = new Audio(audioUrl);
-		// });
-		microphonePermissionCallback();
-	});
+        isRecording = true;
+
+        processor.onaudioprocess = function(e) {
+            for (let i = 0; i < e.inputBuffer.numberOfChannels; ++i)
+                dataReadyCallback(i, e.inputBuffer.getChannelData(i));
+        };
+        microphonePermissionCallback();
+    };
+
+    // Requests microphone and initializes media recorder with event listeners
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        .then(handleSuccess);
 }
