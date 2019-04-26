@@ -1,66 +1,56 @@
 ## DEFINED BY CONFIGURE // TODO add configure script to set pwd once
 PROJECT := $(shell pwd)
-WEBMDECODER_EXPORTED_FUNCTIONS := '_parseWebm' # TODO add to configure scirpt
+WEBASSEMBLY_EXPORTED_FUNCTIONS :=  # TODO add to configure scirpt
 
 ## DEFINED BY STATIC
 BUILD_DIR := $(shell pwd)
 SRC := $(PROJECT)/src
 CC := emcc
 INCLUDE := $(SRC)/c/include
-OPUS_INCLUDE := $(shell pwd)/opus-pkg/include
-OPUS_LIBRARY := $(shell pwd)/opus-pkg/lib
-CFLAGS := -I$(INCLUDE) -I$(OPUS_INCLUDE) -L$(OPUS_LIBRARY)
+CFLAGS := -I$(INCLUDE)
 RUN := emrun
 PROJECT_NAME := $(shell basename $(PROJECT))
 
-all: index.html c c/*.o js js/*.js js/libs js/libs/*.js js/WebmDecoderModule.wasm css css/*.css #* */*
+all: index.html
 
-js:
+js: 
 	mkdir -v js
 
-js/libs:
+js/libs: js
 	mkdir -v js/libs
 
-css:
+css: 
 	mkdir -v css
 
-%.html: $(SRC)/%.html
+%.html: $(SRC)/%.html css/*.css js/AudioProcessorModule.js js/*.js js/libs/*.js
 	cp -v $< $@
 
-opus-build:
-	mkdir -v opus-build
-	cd opus-build && ../opus/autogen.sh && emconfigure ../opus/configure --prefix=$(BUILD_DIR)/opus-pkg --disable-intrinsics
-
-opus-pkg: opus-build
-	mkdir -v opus-pkg
-	cd opus-build && emmake make && emmake make install
-
-c: opus-pkg
+c: 
 	mkdir -v c
 
 c/%.o: $(SRC)/c/%.c $(INCLUDE)/*.h c
 	$(CC) $(CFLAGS) -o $@ $<
 
-js/WebmDecoderModule.wasm: c/WebmDecoder.o c/AudioProcessor.o
-	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBMDECODER_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" -emrun $< -o $@
+js/AudioProcessorModule.js: c/AudioProcessor.o js
+	$(CC) $(CFLAGS) -s EXPORTED_FUNCTIONS="[$(WEBASSEMBLY_EXPORTED_FUNCTIONS)]" -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall']" -emrun $< -o $@
 
-js/%.js: $(SRC)/js/%.js
-	cp -v $^ js/
+js/%.js: $(SRC)/js/%.js js
+	cp -v $^ js/ || true
 
-js/libs/%.js: $(SRC)/js/libs/%.js
-	cp -v $^ js/libs
+js/libs/%.js: $(SRC)/js/libs/%.js js/libs
+	cp -v $^ js/libs || true
 
-css/%.css: $(SRC)/css/%.css
-	cp -v $^ css/
+css/%.css: $(SRC)/css/%.css css
+	cp -v $^ css/ || true
 
 .PHONY: run zip clean superClean
 
 clean:
-	rm -rv *.html js/ css/ c/ opus-pkg/
+	rm -rv *.html js/ css/ c/
 
 superClean: 
 	rm -v $(PROJECT_NAME).zip
-	rm -rv *.html js/ css/ c/ opus-pkg/
+	rm -rv *.html js/ css/ c/
 
 zip: all
 	zip -rouv $(PROJECT_NAME).zip . -i js/ js/* js/*/* css/ css/* *.html
