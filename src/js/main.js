@@ -10,68 +10,17 @@ let recorder;
 
 let Audiorun = false;
 
-function onAudioInfo(channel, data, audioInfo) {
+function onAudioInfo(channel, data, frequencies, audioInfo) {
     if (channel != 0) // skip anything but first channel
         return;
 
     if (Audiorun)
         return;
     Audiorun = true;
-
-    // Takes an Float32Array, copies it to the heap and returns a pointer
-    function arrayToPtr(array) {
-        var ptr = Module._malloc(array.length * 4);
-//        Module.HEAP32.set(array.buffer, ptr); // setting 4 bytes at a time
-        Module.writeArrayToMemory(array, ptr);
-        Module.HEAP32.set([3.2], ptr);
-        return ptr;
-    }
-
-    // Takes a pointer and  array length, and returns a Float32Array from the heap
-    function ptrToArray(ptr, length) {
-        var array = new Float32Array(length);
-        var pos = ptr / 4; // reading 4 bytes at a time
-        array.set(Module.HEAP32.subarray(pos, pos + length));
-        return array;
-    }
-
-    function dfft(input){
-        let n,k;
-        let sum;
-        let output = [];
-        const len = input.length;
-
-        for(n = 0; n < len; n++){
-            sum = 0;
-            for(k = 0; k < len; k++){
-                sum += input[k]*cos((2*PI*k*n)/len);
-            }
-            output.push(sum/len);
-        }
-        return output;
-    }
-
-
-    let maxIndex = 0;
-    //    console.log("Audio Info:");
-    for (let i = 0; i < data.length; ++i) {
-        data[i] = data[i] * 1000;
-        if (data[i] > data[maxIndex])
-            maxIndex = i;
-    }
+    console.log("Data:");
     console.log(data);
-    //    let ptr = arrayToPtr(data);
-    //    Module._dfft(data.length, ptr);
-    //    data = ptrToArray(ptr, data.length);
-    data = dfft(data);
-    let maxIndex2 = 0;
-    for (let i = 0; i < data.length; ++i) {
-        if (data[i] > data[maxIndex2])
-            maxIndex2 = i;
-    }
-    console.log(maxIndex2);
-    console.log(data);
-    //    Module._free(ptr);
+    console.log("Frequencies:");
+    console.log(frequencies);
 }
 
 
