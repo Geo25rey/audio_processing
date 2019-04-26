@@ -52,12 +52,24 @@ function onAudioInfo(channel, data, audioInfo) {
     }
 
 
+    let maxIndex = 0;
     //    console.log("Audio Info:");
+    for (let i = 0; i < data.length; ++i) {
+        data[i] = data[i] * 1000;
+        if (data[i] > data[maxIndex])
+            maxIndex = i;
+    }
     console.log(data);
     //    let ptr = arrayToPtr(data);
     //    Module._dfft(data.length, ptr);
     //    data = ptrToArray(ptr, data.length);
     data = dfft(data);
+    let maxIndex2 = 0;
+    for (let i = 0; i < data.length; ++i) {
+        if (data[i] > data[maxIndex2])
+            maxIndex2 = i;
+    }
+    console.log(maxIndex2);
     console.log(data);
     //    Module._free(ptr);
 }
