@@ -88,7 +88,8 @@ function keyPressed() {
     }
 }
 
-let sineWave = new Array(8192);
+let sineWave = new Array(2048);
+let sampleFrequency;
 
 function draw() {
     let fr = frameRate();
@@ -154,21 +155,21 @@ function draw() {
         100, 
         rawData.length);
     printWave(freqData, 
-        width * 0, 
+        0, 
         height * 0.32, 
         freqData.length * 1.75 / width, 
         -5, 
         freqData.length/2,
         ambiantNoise !== undefined);
     for (let i = 0; i < sineWave.length; ++i)
-        sineWave[i] = sin(i*freqStats.maxIndex + time);
+        sineWave[i] = sin(i*freqStats.maxIndex*sampleFrequency/freqData.length + time);
     console.log(freqData[freqStats.maxIndex]);
     printWave(sineWave, 
-        width * 0, 
+        0, 
         height * 0.3, 
-        sineWave.length / width, 
+        1.0 * width / sineWave.length , 
         2.5 * freqData[freqStats.maxIndex], 
-        sineWave.length / 8,
+        sineWave.length,
         false,
         false);
 
