@@ -74,6 +74,23 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
 //        processor.connect(analyser);
         analyser.connect(context.destination);
 
+        let oscillator = context.createOscillator();
+        let gainNode = context.createGain();
+
+        oscillatorFreq = {
+            set frequency(val) {
+                oscillator.frequency.setValueAtTime(val, context.currentTime); // value in hertz
+            },
+            set volume(val) {
+                gainNode.gain.setValueAtTime(val, context.currentTime);
+            },
+        };
+
+        oscillator.type = 'sine';
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start();
+
         context.suspend();
         isRecording = false;
 

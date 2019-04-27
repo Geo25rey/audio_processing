@@ -72,7 +72,7 @@ function preload() {
 }
 
 function setup() {
-    slider = createSlider(1, 50, 5);
+    slider = createSlider(0, 1, 0.75, 0.05);
     createCanvas(window.innerWidth * 0.95, window.innerHeight * 0.95 - 50);
     frameRate(FPS);
 }
@@ -90,6 +90,7 @@ function keyPressed() {
 
 let sineWave = new Array(2048);
 let sampleFrequency;
+let oscillatorFreq;
 
 function draw() {
     let fr = frameRate();
@@ -161,8 +162,13 @@ function draw() {
         -5, 
         freqData.length/2,
         ambiantNoise !== undefined);
-    for (let i = 0; i < sineWave.length; ++i)
+    for (let i = 0; i < sineWave.length; ++i) {
         sineWave[i] = sin(i*freqStats.maxIndex*sampleFrequency/freqData.length + time);
+    }
+    if (oscillatorFreq) {
+        oscillatorFreq.frequency = freqStats.maxIndex*sampleFrequency/freqData.length;
+        oscillatorFreq.volume = slider.value();
+    }
     console.log(freqData[freqStats.maxIndex]);
     printWave(sineWave, 
         0, 
