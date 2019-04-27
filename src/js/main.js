@@ -95,23 +95,31 @@ function draw() {
 
 
     line(x - 200, y, 0, wave[0]);*/
-    function printWave(wave, yTranslation) {
-        translate(0, yTranslation);
+    function printWave(wave, xTranslation, yTranslation, xScale, yScale, length) {
+        translate(xTranslation, yTranslation);
         stroke(255);
         beginShape();
         noFill();
         let speedError = (spd-speed)/speed + 1;
-        const xScale = wave.length * 1.0 / width;
-        for (let i = 0; i < wave.length; i++) {
+        for (let i = 0; i < length; i++) {
             //let v = wave[i];
-            vertex(i*xScale, 100*wave[i]);
+            vertex(i*xScale, yScale*wave[i]);
             //v.x += speedError;
         }
         endShape();
     }
 
-    printWave(rawData, height * 0.2);
-    printWave(freqData, height * 0.5);
+    printWave(rawData, 
+        0, 
+        height * 0.2, 
+        rawData.length * 1.0 / width, 
+        100, 
+        rawData.length);
+    printWave(freqData, 
+        width * 0.5, height * -0.3, 
+        freqData.length/2 * 1.0 / width, 
+        -5, 
+        freqData.length/2);
 
     time += spd;
 
