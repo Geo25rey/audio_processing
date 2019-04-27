@@ -10,17 +10,43 @@ let recorder;
 
 let Audiorun = false;
 
-function onAudioInfo(channel, data, frequencies, audioInfo) {
-    if (channel != 0) // skip anything but first channel
-        return;
+function arrayStats(data) {
+    let minVal = Number.MAX_VALUE;
+    let maxVal = Number.MIN_VALUE;
+    let sum = 0;
+    for (let pnt of data) {
+        if (minVal > pnt)
+            minVal = pnt;
+        if (maxVal < pnt)
+            maxVal = pnt;
+        sum += pnt;
+    }
+    return {
+        get min() {
+            return minVal;
+        },
+        get max() {
+            return maxVal;
+        },
+        get mean() {
+            return sum * 1.0 / data.length;
+        },
+    };
+}
 
-    if (Audiorun)
-        return;
-    Audiorun = true;
+function onAudioInfo(data, frequencies) {
+//    if (Audiorun)
+//        return;
+//    Audiorun = true;
+    let stats;
     console.log("Data:");
-    console.log(data);
+    stats = arrayStats(data);
+    for (let key in stats)
+        console.log(key, stats[key]);
     console.log("Frequencies:");
-    console.log(frequencies);
+    stats = arrayStats(frequencies);
+    for (let key in stats)
+        console.log(key, stats[key]);
 }
 
 

@@ -39,7 +39,7 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
 	
 	if (typeof(dataReadyCallback) !== 'function')
 		throw new Error();
-	if (dataReadyCallback.length !== 4)
+	if (dataReadyCallback.length !== 2)
 		throw new Error();
 
 	AudioRecorder.prototype.startRecording = function startRecording() {
@@ -67,20 +67,24 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
         let processor = context.createScriptProcessor(1024, 1, 1); // 2^10
         let analyser = context.createAnalyser();
 
-        source.connect(processor);
-        processor.connect(analyser);
+        source.connect(analyser);
+//        processor.connect(analyser);
         analyser.connect(context.destination);
 
         context.suspend();
         isRecording = false;
 
-        processor.onaudioprocess = function(e) {
+        function run() {
+            if (!isRecording)
+                setTimeout(run, 0);
             var dataArray = new Float32Array(analyser.fftSize); // Float32Array needs to be the same length as the fftSize
             analyser.getFloatTimeDomainData(dataArray);
             var freqArray = new Float32Array(analyser.fftSize); // Float32Array needs to be the same length as the fftSize
             analyser.getFloatFrequencyData(freqArray);
-            dataReadyCallback(0, dataArray, freqArray, e.inputBuffer);
+            dataReadyCallback(dataArray, freqArray);
+            setTimeout(run, 0);
         };
+        run();
         microphonePermissionCallback();
     };
 
