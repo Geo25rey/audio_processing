@@ -67,6 +67,8 @@ function AudioRecorder(dataReadyCallback, microphonePermissionCallback) {
         let processor = context.createScriptProcessor(1024, 1, 1); // 2^10
         let analyser = context.createAnalyser();
 
+        analyser.fftSize = 8192;
+
         source.connect(analyser);
 //        processor.connect(analyser);
         analyser.connect(context.destination);

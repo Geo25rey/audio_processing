@@ -11,6 +11,9 @@ let recorder;
 
 let Audiorun = false;
 
+let saveAmbiantNoise = true;
+let ambiantNoise;
+
 function arrayStats(data) {
     let minVal = Number.MAX_VALUE;
     let maxVal = Number.MIN_VALUE;
@@ -50,6 +53,11 @@ function onAudioInfo(data, frequencies) {
     stats = arrayStats(frequencies);
     for (let key in stats)
         console.log(key, stats[key]);
+
+    if (saveAmbiantNoise) {
+        saveAmbiantNoise = false;
+        ambiantNoise = frequencies;
+    }
 }
 
 
@@ -59,9 +67,20 @@ function preload() {
 }
 
 function setup() {
-    createCanvas(window.innerWidth, window.innerHeight);
     slider = createSlider(1, 50, 5);
+    createCanvas(window.innerWidth * 0.9, window.innerHeight * 0.9 - 50);
     frameRate(FPS);
+}
+
+function keyPressed() {
+    switch(keyCode) {
+        case 87: // 'w'
+            saveAmbiantNoise = true;
+            break;
+        default:
+            console.log(keyCode);
+            break;
+    }
 }
 
 function draw() {
@@ -95,7 +114,7 @@ function draw() {
 
 
     line(x - 200, y, 0, wave[0]);*/
-    function printWave(wave, xTranslation, yTranslation, xScale, yScale, length) {
+    function printWave(wave, xTranslation, yTranslation, xScale, yScale, length, useAmbiantNoise) {
         translate(xTranslation, yTranslation);
         stroke(255);
         beginShape();
@@ -103,7 +122,10 @@ function draw() {
         let speedError = (spd-speed)/speed + 1;
         for (let i = 0; i < length; i++) {
             //let v = wave[i];
-            vertex(i*xScale, yScale*wave[i]);
+            if (useAmbiantNoise)
+                vertex(i*xScale, yScale*(wave[i] - ambiantNoise[i]));
+            else
+                vertex(i*xScale, yScale*wave[i]);
             //v.x += speedError;
         }
         endShape();
@@ -116,10 +138,12 @@ function draw() {
         100, 
         rawData.length);
     printWave(freqData, 
-        width * 0.5, height * -0.3, 
-        freqData.length/2 * 1.0 / width, 
+        width * 0, 
+        height * 0.32, 
+        freqData.length * 1.75 / width, 
         -5, 
-        freqData.length/2);
+        freqData.length/2,
+        ambiantNoise !== undefined);
 
     time += spd;
 
