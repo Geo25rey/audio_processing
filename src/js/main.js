@@ -2,7 +2,8 @@
 const FPS = 60;
 
 let time = 0;
-let wave = [];
+let rawData = [];
+let freqData = [];
 let speed = 0.05;
 
 let slider;
@@ -38,11 +39,13 @@ function onAudioInfo(data, frequencies) {
 //    if (Audiorun)
 //        return;
 //    Audiorun = true;
+    rawData = data;
     let stats;
     console.log("Data:");
     stats = arrayStats(data);
     for (let key in stats)
         console.log(key, stats[key]);
+    freqData = frequencies;
     console.log("Frequencies:");
     stats = arrayStats(frequencies);
     for (let key in stats)
@@ -67,11 +70,11 @@ function draw() {
     if (fr >= 1)
         spd = speed * FPS * 1.0 / fr;
     background(0);
-    translate(150, 200);
+    //translate(150, 200);
 
     let x = 0;
     let y = 0;
-
+/*
     for (let i = 0; i < slider.value(); i++) {
         let prevx = x;
         let prevy = y;
@@ -91,23 +94,29 @@ function draw() {
     wave.unshift({x:0, y:y});
 
 
-    translate(200, 0);
-    line(x - 200, y, 0, wave[0]);
-    beginShape();
-    noFill();
-    let speedError = (spd-speed)/speed + 1;
-    for (let i = 0; i < wave.length; i++) {
-        let v = wave[i];
-        vertex(v.x, v.y);
-        v.x += speedError;
+    line(x - 200, y, 0, wave[0]);*/
+    function printWave(wave, yTranslation) {
+        translate(0, yTranslation);
+        stroke(255);
+        beginShape();
+        noFill();
+        let speedError = (spd-speed)/speed + 1;
+        const xScale = wave.length * 1.0 / width;
+        for (let i = 0; i < wave.length; i++) {
+            //let v = wave[i];
+            vertex(i*xScale, 100*wave[i]);
+            //v.x += speedError;
+        }
+        endShape();
     }
-    endShape();
 
+    printWave(rawData, height * 0.2);
+    printWave(freqData, height * 0.5);
 
     time += spd;
 
 
-    if (wave.length > 250) {
+/*    if (wave.length > 250) {
         wave.pop();
-    }
+    }*/
 }
