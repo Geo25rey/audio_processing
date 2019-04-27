@@ -14,26 +14,32 @@ let Audiorun = false;
 let saveAmbiantNoise = true;
 let ambiantNoise;
 
-function arrayStats(data) {
-    let minVal = Number.MAX_VALUE;
-    let maxVal = Number.MIN_VALUE;
+let dataStats = {};
+let freqStats = {};
+
+function arrayStats(data, length) {
+    let minIndex = 0;
+    let maxIndex = 0;
     let sum = 0;
-    for (let pnt of data) {
-        if (minVal > pnt)
-            minVal = pnt;
-        if (maxVal < pnt)
-            maxVal = pnt;
+    for (let i = 0; i < length; ++i) {
+        let pnt = data[i];
+        if (data[minIndex] > pnt) {
+            minIndex = int(i);
+        }
+        if (data[maxIndex] < pnt) {
+            maxIndex = int(i);
+        }
         sum += pnt;
     }
     return {
-        get min() {
-            return minVal;
+        get minIndex() {
+            return minIndex;
         },
-        get max() {
-            return maxVal;
+        get maxIndex() {
+            return maxIndex;
         },
         get mean() {
-            return sum * 1.0 / data.length;
+            return sum * 1.0 / length;
         },
     };
 }
@@ -43,16 +49,15 @@ function onAudioInfo(data, frequencies) {
 //        return;
 //    Audiorun = true;
     rawData = data;
-    let stats;
-    console.log("Data:");
-    stats = arrayStats(data);
-    for (let key in stats)
-        console.log(key, stats[key]);
+    //console.log("Data:");
+    dataStats = arrayStats(data, data.length);
+    //for (let key in dataStats)
+    //    console.log(key, dataStats[key]);
     freqData = frequencies;
-    console.log("Frequencies:");
-    stats = arrayStats(frequencies);
-    for (let key in stats)
-        console.log(key, stats[key]);
+    //console.log("Frequencies:");
+    freqStats = arrayStats(frequencies, frequencies.length/2);
+    //for (let key in freqStats)
+    //    console.log(key, freqStats[key]);
 
     if (saveAmbiantNoise) {
         saveAmbiantNoise = false;
@@ -68,7 +73,7 @@ function preload() {
 
 function setup() {
     slider = createSlider(1, 50, 5);
-    createCanvas(window.innerWidth * 0.9, window.innerHeight * 0.9 - 50);
+    createCanvas(window.innerWidth * 0.95, window.innerHeight * 0.95 - 50);
     frameRate(FPS);
 }
 
@@ -82,6 +87,8 @@ function keyPressed() {
             break;
     }
 }
+
+let sineWave = new Array(8192);
 
 function draw() {
     let fr = frameRate();
@@ -114,7 +121,7 @@ function draw() {
 
 
     line(x - 200, y, 0, wave[0]);*/
-    function printWave(wave, xTranslation, yTranslation, xScale, yScale, length, useAmbiantNoise) {
+    function printWave(wave, xTranslation, yTranslation, xScale, yScale, length, useAmbiantNoise, show) {
         translate(xTranslation, yTranslation);
         stroke(255);
         beginShape();
@@ -122,10 +129,19 @@ function draw() {
         let speedError = (spd-speed)/speed + 1;
         for (let i = 0; i < length; i++) {
             //let v = wave[i];
-            if (useAmbiantNoise)
-                vertex(i*xScale, yScale*(wave[i] - ambiantNoise[i]));
-            else
-                vertex(i*xScale, yScale*wave[i]);
+            if (typeof(wave) !== 'function') {
+                if (useAmbiantNoise)
+                    vertex(i*xScale, yScale*(wave[i] - ambiantNoise[i]));
+                else {
+                    vertex(i*xScale, yScale*wave[i]);
+                    if (show)
+                        console.log(yScale * wave[i]);
+                }
+            } else {
+                vertex(i*xScale, yScale*wave(i));
+                console.log(wave(i));
+                debugger;
+            }
             //v.x += speedError;
         }
         endShape();
@@ -144,6 +160,17 @@ function draw() {
         -5, 
         freqData.length/2,
         ambiantNoise !== undefined);
+    for (let i = 0; i < sineWave.length; ++i)
+        sineWave[i] = sin(i*freqStats.maxIndex + time);
+    console.log(freqData[freqStats.maxIndex]);
+    printWave(sineWave, 
+        width * 0, 
+        height * 0.3, 
+        sineWave.length / width, 
+        2.5 * freqData[freqStats.maxIndex], 
+        sineWave.length / 8,
+        false,
+        false);
 
     time += spd;
 
